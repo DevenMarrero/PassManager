@@ -105,9 +105,10 @@ def admin_user_menu(conn, userID):
 -ADMIN USER MENU-
 1 - List all users
 2 - Change Password
-3 - Create new user
-4 - Remove user
-5 - Back
+3 - Promote User 
+4 - Create new user
+5 - Remove user
+6 - Back
 : ''', conn)
         while True:
             answer = receive(conn)
@@ -118,12 +119,15 @@ def admin_user_menu(conn, userID):
                 change_password(conn, userID)
                 break
             elif answer == '3':
-                create_user(conn, 1)
+                promote_user(conn)
                 break
             elif answer == '4':
-                remove_user(conn)
+                create_user(conn, 1)
                 break
             elif answer == '5':
+                remove_user(conn)
+                break
+            elif answer == '6':
                 return
             else:
                 send("Invalid input please try again: ", conn)
@@ -272,6 +276,33 @@ def remove_user(conn):
         send(f'[SERVER] All data from {username} has been removed \n', conn)
     else:
         return
+
+
+def promote_user(conn):
+    with sqlite3.connect("PassManager.db") as db:
+        cursor = db.cursor()
+    while True:
+        send('Username you want to promote: ', conn)
+        username = receive(conn)
+        find = "SELECT isadmin FROM user WHERE username = ?"
+        cursor.execute(find, [username])
+        results = cursor.fetchall()[0]
+        if not results:
+            send('User does not exist, would you like to try again? (y/n): ', conn)
+            answer = receive(conn)
+            if answer.lower() == 'n':
+                return
+            else:
+                continue
+        else:
+            if results == 1:
+                send("User is already an admin: ", conn)
+                return
+            else:
+                break
+    promote = "UPDATE user SET isadmin = 1 WHERE username = ?"
+    cursor.execute(promote, [username])
+    send(f"[Server] User {username} is now an admin", conn)
 
 
 def list_users(conn):
