@@ -113,12 +113,12 @@ def handle_client(conn, addr):
 
         else:
             send('''
-            -MAIN MENU-
-            1 - Open Passwords Menu
-            2 - Open User Menu
-            3 - Disconnect From Server
-            4 - Close Server
-            : ''', conn)
+-MAIN MENU-
+1 - Open Passwords Menu
+2 - Open User Menu
+3 - Disconnect From Server
+4 - Close Server
+: ''', conn)
             msg = receive(conn)
 
             if msg == "3":

@@ -53,7 +53,7 @@ def pass_menu(conn, sessionID):
 1 - Search Password
 2 - Create Password
 3 - Remove password
-4 - Exit
+4 - Back
 : ''', conn)
         while True:
             answer = receive(conn)

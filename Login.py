@@ -107,7 +107,7 @@ def admin_user_menu(conn, userID):
 2 - Change Password
 3 - Create new user
 4 - Remove user
-5 - Exit
+5 - Back
 : ''', conn)
         while True:
             answer = receive(conn)
@@ -134,7 +134,7 @@ def user_menu(conn, userID):
         send('''
 -USER MENU-
 1 - Change Password
-2 - Exit
+2 - Back
 : ''', conn)
         while True:
             answer = receive(conn)
