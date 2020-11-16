@@ -286,7 +286,7 @@ def promote_user(conn):
         username = receive(conn)
         find = "SELECT isadmin FROM user WHERE username = ?"
         cursor.execute(find, [username])
-        results = cursor.fetchall()[0]
+        results = cursor.fetchall()
         if not results:
             send('User does not exist, would you like to try again? (y/n): ', conn)
             answer = receive(conn)
@@ -295,13 +295,15 @@ def promote_user(conn):
             else:
                 continue
         else:
-            if results == 1:
-                send("User is already an admin: ", conn)
+            if results[0][0] == 1:
+                send(f"[Server] {username} is already an admin", conn)
                 return
             else:
                 break
+    print(results[0][0])
     promote = "UPDATE user SET isadmin = 1 WHERE username = ?"
     cursor.execute(promote, [username])
+    db.commit()
     send(f"[Server] User {username} is now an admin", conn)
 
 
