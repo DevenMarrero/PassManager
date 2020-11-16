@@ -80,12 +80,69 @@ If it is you are good to go but if not try forwarding a different port or search
 
 ## Using Server
 
+You navigate through menus by typing the number next to the option you would want to select and pressing enter.
+
+**Login**
 Once you have connected to the server as a client you are greeted with a welcome menu
 ```
 -LOGIN MENU-
 1 - Login
 2 - Create new User
-:
 ```
 
-You navigate through menus by typing the number next to the option you would like.
+`1 - Login` - Pretty self explanitory
+
+`2 - Create new User` - This will ask the user for a Username, Firstname, and Password. These users will only be users and (for now) cannot be made admins later, only an admin 
+can create another admin account
+
+Login passwords are stored in the database as hashes and are impossible to convert back to plaintext.
+
+**Main Menu**
+
+Users are greeted with the menu
+```
+-MAIN MENU-
+1 - Open Passwords Menu
+2 - Open User Menu
+3 - Disconnect From Server
+```
+while admins get the additional option of `4 - Close Server` which will send a message to everyone connected and then close the server after 30 seconds.
+
+`3 - Disconnect From Server` -Use this instead of closing the Client as otherwise the server will think you are still connected and this may cause issues later.
+
+**Passwords Menu**
+
+Menu for managing stored passwords
+
+```
+-PASSWORD MENU-
+1 - Search Password
+2 - Create Password
+3 - Remove password
+4 - Back
+```
+
+`1 - Search Password` -Will ask for a search and will return all passwords that include the term you searched for. Leave the search blank for all passwords.
+Adding `!excel` to your search will send you a Microsoft Excel spreadsheet file of your search, this will automatically be downloaded to the same directory you are running the client from.
+
+`2 - Create Password` -This is how you add a new password to store in the database. You will be asked for the name of the Account, username, password, and an optoinal attached note that you can fill with extra information or leave blank.
+
+`3 - Remove password` -This will ask for the name of account you want to remove and then permanently delete it from the database
+
+**User Menu**
+
+Menu for managing server users, mostly for admins. Regular users will only be able to access `2 - Change Password`
+
+```
+-ADMIN USER MENU-
+1 - List all users
+2 - Change Password
+3 - Create new user
+4 - Remove user
+5 - Back
+```
+
+`1 - List all users` -Shows admin a list of the usernames and Firstnames of all the users who have an account
+`2 - Change Password` -All users can use this to change their server login password
+`3 - Create new user` Admins can create a new user, this will ask for a username, firstname, password, and if they are an admin
+`4 - Remove user` Admin can remove a user's account, will be asked for the user's username and password
