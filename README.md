@@ -91,10 +91,9 @@ Once you have connected to the server as a client you are greeted with a welcome
 2 - Create new User
 ```
 
-`1 - Login` - Pretty self explanitory
+`1 - Login`           - Pretty self explanitory
 
-`2 - Create new User` - This will ask the user for a Username, Firstname, and Password. These users will only be users and (for now) cannot be made admins later, only an admin 
-can create another admin account
+`2 - Create new User` - This will ask the user for a Username, Firstname, and Password. These accounts will only be users, only an admin can create another admin account
 
 Login passwords are stored in the database as hashes and are impossible to convert back to plaintext.
 
@@ -138,12 +137,18 @@ Menu for managing server users, mostly for admins. Regular users will only be ab
 -ADMIN USER MENU-
 1 - List all users
 2 - Change Password
-3 - Create new user
-4 - Remove user
-5 - Back
+3 - Promote User 
+4 - Create new user
+5 - Remove user
+6 - Back
 ```
 
 `1 - List all users` -Shows admin a list of the usernames and Firstnames of all the users who have an account
+
 `2 - Change Password` -All users can use this to change their server login password
-`3 - Create new user` Admins can create a new user, this will ask for a username, firstname, password, and if they are an admin
-`4 - Remove user` Admin can remove a user's account, will be asked for the user's username and password
+
+`3 - Promote User` -Promote a regular user to become an Admin
+
+`4 - Create new user` -Admins can create a new user, this will ask for a username, firstname, password, and if they are an admin
+
+`5 - Remove user` -Admin can remove a user's account, will be asked for the user's username and password
