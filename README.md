@@ -82,7 +82,8 @@ If it is you are good to go but if not try forwarding a different port or search
 
 You navigate through menus by typing the number next to the option you would want to select and pressing enter.
 
-**Login**
+### Login Menu
+
 Once you have connected to the server as a client you are greeted with a welcome menu
 ```
 -LOGIN MENU-
@@ -97,7 +98,7 @@ can create another admin account
 
 Login passwords are stored in the database as hashes and are impossible to convert back to plaintext.
 
-**Main Menu**
+### Main Menu
 
 Users are greeted with the menu
 ```
@@ -110,7 +111,7 @@ while admins get the additional option of `4 - Close Server` which will send a m
 
 `3 - Disconnect From Server` -Use this instead of closing the Client as otherwise the server will think you are still connected and this may cause issues later.
 
-**Passwords Menu**
+### Passwords Menu
 
 Menu for managing stored passwords
 
@@ -129,7 +130,7 @@ Adding `!excel` to your search will send you a Microsoft Excel spreadsheet file 
 
 `3 - Remove password` -This will ask for the name of account you want to remove and then permanently delete it from the database
 
-**User Menu**
+### User Menu
 
 Menu for managing server users, mostly for admins. Regular users will only be able to access `2 - Change Password`
 
