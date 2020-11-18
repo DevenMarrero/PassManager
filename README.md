@@ -14,6 +14,8 @@ Install libraries using
 
 `pip install Requirements.txt`
 
+Note: Libraries only have to be installed on the device the server is running on, the client does not use any external librairies.
+
 ## Quick Lesson on Internet Connections
 
 Each device on your wifi is given an **internal** IP address so home devices can communicate. For example my PC's internal address is 10.0.0.40 and my phone is 10.0.0.41
