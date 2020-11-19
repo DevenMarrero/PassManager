@@ -14,7 +14,9 @@ Install libraries using
 
 `pip install Requirements.txt`
 
-## Quick Lesson on Internet connections
+Note: Libraries only have to be installed on the device the server is running on, the client does not use any external librairies.
+
+## Quick Lesson on Internet Connections
 
 Each device on your wifi is given an **internal** IP address so home devices can communicate. For example my PC's internal address is 10.0.0.40 and my phone is 10.0.0.41
 
@@ -29,8 +31,8 @@ More on how to setup a port forward later.
 **Server Only Accessable on your Network (Local)**
 
 The server will automatically use the local IP of the mchine it is running on.
-The programm will ask you what port to run the server on and this can be any number between 1 and about 63000 but I use port 8050 as I can remember it and
-as far as I know it is unused by other programms.
+The program will ask you what port to run the server on and this can be any number between 1 and about 63000 but I use port 8050 as I can remember it and
+as far as I know it is unused by other programs.
 
 The server will then print a message similar to `[LISTENING] Server is listening on 10.0.0.40:8050` where 10.0.0.40:8050 = (IP Address):(Port)
 
