@@ -1,6 +1,4 @@
-import base64
-import os
-import sqlite3
+import base64, os, sqlite3, random
 import Login
 # pip packages
 import xlsxwriter
@@ -77,7 +75,7 @@ def pass_menu(conn, sessionID):
             elif answer == '4':
                 return
             else:
-                send("Invalid input please try again ", conn)
+                send("Invalid input please try again: ", conn)
                 continue
 
 
@@ -153,16 +151,20 @@ def create_pass(conn, sessionID):
         send('-Username cannot be blank-', conn)
         send("Account Username: ", conn)
         username = receive(conn)
-    send("Account Password: ", conn)
+    send("Account Password ('!generate!' for random pass): ", conn)
     password = receive(conn)
-    send("Reenter Password: ", conn)
-    password1 = receive(conn)
-    while password != password1 or password == "":
-        send("-Passwords don't match or they are blank-", conn)
-        send("Account Password: ", conn)
-        password = receive(conn)
+    if not password == "!generate!":
         send("Reenter Password: ", conn)
         password1 = receive(conn)
+        while password != password1 or password == "":
+            send("-Passwords don't match or they are blank-", conn)
+            send("Account Password: ", conn)
+            password = receive(conn)
+            send("Reenter Password: ", conn)
+            password1 = receive(conn)
+    else:
+        password = generate_pass()
+        password1 = password[:]
     send("Note (optional): ", conn)
     note = receive(conn)
     password = password.encode()
@@ -213,3 +215,16 @@ def remove_pass(conn, sessionID):
              conn)
     else:
         return
+
+
+def generate_pass():
+    uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    lowercasse = uppercase.lower()
+    numbers = "0123456789"
+    symbols = "!@#$%&*?"
+    total = uppercase + lowercasse + numbers + symbols
+    password = "".join(random.sample(total, 10))
+    while not any(symbol in password for symbol in symbols) or not any(letter in password for letter in uppercase):
+        password = "".join(random.sample(total, 10))
+    return password
+

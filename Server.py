@@ -57,91 +57,95 @@ def receive(conn):
 
 
 def handle_client(conn, addr):
-    with sqlite3.connect("PassManager.db") as db:  # Setup Connection
-        cursor = db.cursor()
-    cursor.execute("CREATE TEMP TABLE IF NOT EXISTS Variables (Name TEXT PRIMARY KEY, Value TEXT);")
-    print(f"[NEW CONNECTION] {addr} connected.")
-    send(f'[SERVER] Connected to Server at {SERVER}', conn)
-    connected = True
-    send('''
+    try:
+        with sqlite3.connect("PassManager.db") as db:  # Setup Connection
+            cursor = db.cursor()
+        cursor.execute("CREATE TEMP TABLE IF NOT EXISTS Variables (Name TEXT PRIMARY KEY, Value TEXT);")
+        print(f"[NEW CONNECTION] {addr} connected.")
+        send(f'[SERVER] Connected to Server at {SERVER}', conn)
+        connected = True
+        send('''
 -LOGIN MENU-
 1 - Login
 2 - Create new User
 : ''', conn)
-    answer = receive(conn)
-    if answer == '2':
-        Login.create_user(conn)
+        answer = receive(conn)
+        if answer == '2':
+            Login.create_user(conn)
 
-    sessionID = Login.login(conn)  # Login User
+        sessionID = Login.login(conn)  # Login User
 
-    if sessionID:  # Save sessionID
-        execute = "INSERT OR REPLACE INTO Variables VALUES ('sessionID', ?);"
-        cursor.execute(execute, [sessionID])
-    else:  # If they wanted to not login
-        connected = False
-        send(f'[SERVER] You have disconnected', conn)
-        print(f'[SERVER] User ({addr}) Has Disconnected')
+        if sessionID:  # Save sessionID
+            execute = "INSERT OR REPLACE INTO Variables VALUES ('sessionID', ?);"
+            cursor.execute(execute, [sessionID])
+        else:  # If they wanted to not login
+            connected = False
+            send(f'[SERVER] You have disconnected', conn)
+            print(f'[SERVER] User ({addr}) Has Disconnected')
 
-    while connected:  # Loop until they disconnect ------------------
-        if not Login.check_admin(sessionID):
-            send('''
+        while connected:  # Loop until they disconnect ------------------
+            if not Login.check_admin(sessionID):
+                send('''
 -MAIN MENU-
 1 - Open Passwords Menu
 2 - Open User Menu
 3 - Disconnect From Server
 : ''', conn)
-            msg = receive(conn)
+                msg = receive(conn)
 
-            if msg == "3":
-                connected = False
-                send(f'[SERVER] You have disconnected', conn)
-                print(f'[SERVER] User ({addr}) Has Disconnected')
-                continue
+                if msg == "3":
+                    connected = False
+                    send(f'[SERVER] You have disconnected', conn)
+                    print(f'[SERVER] User ({addr}) Has Disconnected')
+                    continue
 
-            elif msg == '1':
-                Passwords.pass_menu(conn, sessionID)
-                continue
-            elif msg == "2":
-                if Login.check_admin(sessionID):
-                    Login.admin_user_menu(conn, sessionID)
+                elif msg == '1':
+                    Passwords.pass_menu(conn, sessionID)
+                    continue
+                elif msg == "2":
+                    if Login.check_admin(sessionID):
+                        Login.admin_user_menu(conn, sessionID)
+                    else:
+                        Login.user_menu(conn, sessionID)
+                    continue
                 else:
-                    Login.user_menu(conn, sessionID)
-                continue
-            else:
-                send("[SERVER] Invalid input please try again ", conn)
-                continue
+                    send("[SERVER] Invalid input please try again ", conn)
+                    continue
 
-        else:
-            send('''
+            else:
+                send('''
 -MAIN MENU-
 1 - Open Passwords Menu
 2 - Open User Menu
 3 - Disconnect From Server
 4 - Close Server
 : ''', conn)
-            msg = receive(conn)
+                msg = receive(conn)
 
-            if msg == "3":
-                connected = False
-                send(f'[SERVER] You have disconnected', conn)
-                print(f'[SERVER] User ({addr}) Has Disconnected')
-                continue
-            elif msg == '1':
-                Passwords.pass_menu(conn, sessionID)
-                continue
-            elif msg == "2":
-                if Login.check_admin(sessionID):
-                    Login.admin_user_menu(conn, sessionID)
+                if msg == "3":
+                    connected = False
+                    send(f'[SERVER] You have disconnected', conn)
+                    print(f'[SERVER] User ({addr}) Has Disconnected')
+                    continue
+                elif msg == '1':
+                    Passwords.pass_menu(conn, sessionID)
+                    continue
+                elif msg == "2":
+                    if Login.check_admin(sessionID):
+                        Login.admin_user_menu(conn, sessionID)
+                    else:
+                        Login.user_menu(conn, sessionID)
+                    continue
+                elif msg == '4':
+                    close_server()
+                    continue
                 else:
-                    Login.user_menu(conn, sessionID)
-                continue
-            elif msg == '4':
-                close_server()
-                continue
-            else:
-                send("[SERVER] Invalid input please try again ", conn)
-                continue
-    conn.close()
+                    send("[SERVER] Invalid input please try again ", conn)
+                    continue
+        conn.close()
+    except ConnectionResetError:
+        print(f'[SERVER] User ({addr}) Has Disconnected')
+        conn.close()
 
 
 def start():
