@@ -3,7 +3,7 @@
 ## Description
 Python code for a sever-run password manager that can be accessed from anywhere. Supports multiple users and all passwords are encrypted.
 
-This project was born out of neccesity as many of my personal accounts were being logged into by unknown people due to all my passwords being the same.
+This project was born out of necessity as many of my personal accounts were being logged into by unknown people due to all my passwords being the same.
 I wanted to make my passwords unique and needed a way to safely store them. Paying for a service to do that for me wasn't ideal so I made a program that can keep
 all my passwords safely encrypted on my home computer while being accessed from anywhere.
 
@@ -12,7 +12,7 @@ all my passwords safely encrypted on my home computer while being accessed from 
 
 Install libraries using
 
-`pip install Requirements.txt`
+`pip install Requirements.txt` in the windows command prompt (Start + cmd)
 
 Note: Libraries only have to be installed on the device the server is running on, the client does not use any external librairies.
 
@@ -127,7 +127,7 @@ Menu for managing stored passwords
 `1 - Search Password` -Will ask for a search and will return all passwords that include the term you searched for. Leave the search blank for all passwords.
 Adding `!excel` to your search will send you a Microsoft Excel spreadsheet file of your search, this will automatically be downloaded to the same directory you are running the client from.
 
-`2 - Create Password` -This is how you add a new password to store in the database. You will be asked for the name of the Account, username, password, and an optoinal attached note that you can fill with extra information or leave blank.
+`2 - Create Password` -This is how you add a new password to store in the database. You will be asked for the name of the Account, username, password, and an optoinal attached note that you can fill with extra information or leave blank. When creating a password you can type `!generate!` and the program will give you a 10-digit password with at least 1 symbol and a capital.
 
 `3 - Remove password` -This will ask for the name of account you want to remove and then permanently delete it from the database
 
