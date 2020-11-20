@@ -17,6 +17,7 @@ while True:
             f.write("(ENTER PORT HERE) -Port")
         print("File created, please open <server.txt> and enter values in between brackets")
         input("Press enter to continue...")
+        continue
 
     try:
         PORT = int(PORT)
