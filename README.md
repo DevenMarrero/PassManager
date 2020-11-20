@@ -127,7 +127,7 @@ Menu for managing stored passwords
 `1 - Search Password` -Will ask for a search and will return all passwords that include the term you searched for. Leave the search blank for all passwords.
 Adding `!excel` to your search will send you a Microsoft Excel spreadsheet file of your search, this will automatically be downloaded to the same directory you are running the client from.
 
-`2 - Create Password` -This is how you add a new password to store in the database. You will be asked for the name of the Account, username, password, and an optoinal attached note that you can fill with extra information or leave blank.
+`2 - Create Password` -This is how you add a new password to store in the database. You will be asked for the name of the Account, username, password, and an optoinal attached note that you can fill with extra information or leave blank. When creating a password you can type `!generate!` and the program will give you a 10-digit password with at least 1 symbol and a capital.
 
 `3 - Remove password` -This will ask for the name of account you want to remove and then permanently delete it from the database
 
