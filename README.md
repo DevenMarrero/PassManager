@@ -3,7 +3,7 @@
 ## Description
 Python code for a sever-run password manager that can be accessed from anywhere. Supports multiple users and all passwords are encrypted.
 
-This project was born out of neccesity as many of my personal accounts were being logged into by unknown people due to all my passwords being the same.
+This project was born out of necessity as many of my personal accounts were being logged into by unknown people due to all my passwords being the same.
 I wanted to make my passwords unique and needed a way to safely store them. Paying for a service to do that for me wasn't ideal so I made a program that can keep
 all my passwords safely encrypted on my home computer while being accessed from anywhere.
 
