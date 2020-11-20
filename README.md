@@ -12,7 +12,7 @@ all my passwords safely encrypted on my home computer while being accessed from 
 
 Install libraries using
 
-`pip install Requirements.txt`
+`pip install Requirements.txt` in the windows command prompt (Start + cmd)
 
 Note: Libraries only have to be installed on the device the server is running on, the client does not use any external librairies.
 
