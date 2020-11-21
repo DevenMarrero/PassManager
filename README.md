@@ -36,7 +36,7 @@ as far as I know it is unused by other programs.
 
 The server will then print a message similar to `[LISTENING] Server is listening on 10.0.0.40:8050` where 10.0.0.40:8050 = (IP Address):(Port)
 
-When running Client.py for the first time it will create the file `Server.txt` which will look like this
+Run Client.py for the first time and it will create the file `Server.txt` which will look like this
 
 ```
 (ENTER IP HERE) -IP
@@ -48,7 +48,7 @@ This options will be used automatically next time you start the Client so to cha
 
 **Server Accessable Anywhere (Public)**
 
-This is very similar to the local setup however you will need to setup a port forward first, the instruction for that can be found below.
+This is very similar to the local set up however you will need to setup a port forward first, the instruction for that can be found below.
 
 Once the port forward has been setup make sure the server is running on the forwarded port and that the fields in `Server.txt` are filled in as 
 
@@ -57,7 +57,7 @@ Once the port forward has been setup make sure the server is running on the forw
 (Server port) -Port
 ```
 
-## Seting up a port forward
+## Setting up a Port Forward
 
 To setup a port forward you need to login to your routers gateway through your browser. You can find the gateway by opening a Windows Command-Prompt 
 (press Start and search for 'cmd') and typing `ipconfig` into the prompt. In the results that come up find the Default Gateway.
