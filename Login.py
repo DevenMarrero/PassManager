@@ -222,15 +222,15 @@ def create_user(conn, isadmin=0):
         send("Make user an Admin (y/n): ", conn)
         admin = receive(conn)
         admin = 1 if (admin == 'y') else 0
-    send("Password (hidden): ", conn)
+    send("Password: ", conn)
     password = receive(conn)
-    send("Reenter Password (hidden): ", conn)
+    send("Reenter Password: ", conn)
     password1 = receive(conn)
     while password != password1 or password == "":
         send("-Passwords don't match or they are blank-", conn)
-        send("Password (hidden): ", conn)
+        send("Password: ", conn)
         password = receive(conn)
-        send("Reenter Password (hidden): ", conn)
+        send("Reenter Password: ", conn)
         password1 = receive(conn)
     insertData = '''INSERT INTO user(username, firstname, password, isadmin)
     VALUES(?,?,?,?)'''
@@ -245,7 +245,7 @@ def remove_user(conn):
     while found == 0:  # Check if user does not exist
         send('username: ', conn)
         username = receive(conn)
-        send("Password (hidden): ", conn)
+        send("Password: ", conn)
         password = receive(conn)
         with sqlite3.connect("PassManager.db") as db:
             cursor = db.cursor()
@@ -292,8 +292,7 @@ def promote_user(conn):
             answer = receive(conn)
             if answer.lower() == 'n':
                 return
-            else:
-                continue
+            continue
         else:
             if results[0][0] == 1:
                 send(f"[Server] {username} is already an admin", conn)
