@@ -97,8 +97,10 @@ def search_pass(conn, sessionID, search, export):
     results = sorted(results)
     headers = ["Account", "Username", "Password", "Note"]
     send(tabulate(results, headers=headers), conn)
+    # Send Client Search excel
     if export:
-        filename = "SearchResults.xlsx"
+        filename = F"ID{sessionID}SearchResults.xlsx"
+        # Make spreadsheet
         workbook = xlsxwriter.Workbook(filename)
         worksheet = workbook.add_worksheet()
         row = 0
@@ -117,7 +119,7 @@ def search_pass(conn, sessionID, search, export):
         workbook.close()
 
         filesize = os.path.getsize(filename)
-        send(f"{filename}<SEPARATOR>{filesize}", conn)
+        send(f"SearchResults.xlsx<SEPARATOR>{filesize}", conn)
         with open(filename, 'rb') as f:
             file_data = f.read(filesize)
             conn.send(file_data)
@@ -151,9 +153,9 @@ def create_pass(conn, sessionID):
         send('-Username cannot be blank-', conn)
         send("Account Username: ", conn)
         username = receive(conn)
-    send("Account Password ('!generate!' for random pass): ", conn)
+    send("Account Password ('!generate' for random pass): ", conn)
     password = receive(conn)
-    if not password == "!generate!":
+    if not password == "!generate":
         send("Reenter Password: ", conn)
         password1 = receive(conn)
         while password != password1 or password == "":
