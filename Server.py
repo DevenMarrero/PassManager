@@ -5,7 +5,7 @@ import Login
 import Passwords
 import time
 import os
-
+# GUI
 HEADER = 64
 FORMAT = 'utf-8'
 connections = []
