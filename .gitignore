@@ -1,0 +1,6 @@
+/venv/
+/dist
+/PassManager.db
+/PassManager.ico
+/server.txt
+/*.xlsx
