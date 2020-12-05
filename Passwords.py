@@ -1,8 +1,10 @@
-import base64, os, sqlite3, random
+import base64
+import os
+import sqlite3
+import random
 import Login
 # pip packages
 import xlsxwriter
-from tabulate import tabulate
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -44,61 +46,30 @@ def create_key_from_pass(userPass, salt):
 
 # Functions
 # SQL passwords is passID, userID, account, username, password
-def pass_menu(conn, sessionID):
-    while True:
-        send('''
--PASSWORD MENU-
-1 - Search Password
-2 - Create Password
-3 - Remove password
-4 - Back
-: ''', conn)
-        while True:
-            answer = receive(conn)
-            if answer == '1':
-                send("Enter Search (Leave blank for all; !excel for spreadsheet): ", conn)
-                search = receive(conn).lower()
-                if '!excel' in search:
-                    export = True
-                    search = search.replace('!excel', '').strip()
-                else:
-                    export = False
-                search = '%' + search + '%'
-                search_pass(conn, sessionID, search, export)
-                break
-            elif answer == '2':
-                create_pass(conn, sessionID)
-                break
-            elif answer == '3':
-                remove_pass(conn, sessionID)
-                break
-            elif answer == '4':
-                return
-            else:
-                send("Invalid input please try again: ", conn)
-                continue
 
 
 def search_pass(conn, sessionID, search, export):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
+    search = '%' + search + '%'
     passList = f"SELECT account, username, password, salt, note FROM passwords WHERE userID= ? AND account LIKE ?"
     cursor.execute(passList, [sessionID, search])
     results = cursor.fetchall()
-    for ind, entrance in enumerate(results):
-        results[ind] = list(entrance)
-        salt = entrance[3]
+    for ind, val in enumerate(results):
+        results[ind] = list(val)
+        results[ind][0] = results[ind][0].capitalize()
+        salt = val[3]
         f = create_key_from_pass(Login.password, salt)
-        decrypted = f.decrypt(entrance[2])
+        decrypted = f.decrypt(val[2])
         results[ind][2] = decrypted.decode()
         results[ind].remove(results[ind][3])
 
-    send("\n", conn)
     results = sorted(results)
     headers = ["Account", "Username", "Password", "Note"]
-    send(tabulate(results, headers=headers), conn)
+    if int(export) == 0:
+        return str(results)
     # Send Client Search excel
-    if export:
+    else:
         filename = F"ID{sessionID}SearchResults.xlsx"
         # Make spreadsheet
         workbook = xlsxwriter.Workbook(filename)
@@ -123,52 +94,21 @@ def search_pass(conn, sessionID, search, export):
         with open(filename, 'rb') as f:
             file_data = f.read(filesize)
             conn.send(file_data)
-            sconn = str(conn)
-            print(f'''File ({filename}) has been transmitted to {sconn[sconn.find("raddr=('")+6:-1]}''')
+            strconn = str(conn)
+            print(f'''File ({filename}) has been transmitted to {strconn[strconn.find("raddr=('")+6:-1]}''')
         os.remove(filename)
 
 
-def create_pass(conn, sessionID):
-    send("\n-Creating New Password-", conn)
-    found = 0
-    while found == 0:  # Check if password already exists
-        send("Name of Account: ", conn)
-        account = receive(conn).lower()
-        with sqlite3.connect("PassManager.db") as db:
-            cursor = db.cursor()
-        findUser = "SELECT * FROM passwords WHERE userID = ? AND account = ?"
-        cursor.execute(findUser, [sessionID, account])
+def create_pass(sessionID, account, username, password, note):
+    with sqlite3.connect("PassManager.db") as db:
+        cursor = db.cursor()
+    # Check if password already exists
+    findUser = "SELECT * FROM passwords WHERE userID = ? AND account = ?"
+    cursor.execute(findUser, [sessionID, account])
+    if cursor.fetchall():
+        return 'Error: Account Already Exists'
 
-        if cursor.fetchall():
-            send('Account already stored, would you like to add something else (y/n): ', conn)
-            again = receive(conn)
-            if again.lower() == 'n':
-                return
-        else:
-            found = 1
-
-    send("Account Username: ", conn)
-    username = receive(conn)
-    while username == '':
-        send('-Username cannot be blank-', conn)
-        send("Account Username: ", conn)
-        username = receive(conn)
-    send("Account Password ('!generate' for random pass): ", conn)
-    password = receive(conn)
-    if not password == "!generate":
-        send("Reenter Password: ", conn)
-        password1 = receive(conn)
-        while password != password1 or password == "":
-            send("-Passwords don't match or they are blank-", conn)
-            send("Account Password: ", conn)
-            password = receive(conn)
-            send("Reenter Password: ", conn)
-            password1 = receive(conn)
-    else:
-        password = generate_pass()
-        password1 = password[:]
-    send("Note (optional): ", conn)
-    note = receive(conn)
+    # Create Password
     password = password.encode()
     salt = os.urandom(16)
     f = create_key_from_pass(Login.password, salt)
@@ -176,49 +116,27 @@ def create_pass(conn, sessionID):
         VALUES(?,?,?,?,?,?)'''
     cursor.execute(insertData, [sessionID, account, username, f.encrypt(password), salt, note])
     db.commit()
-    if note == '':
-        note = 'None'
-    send(f'\n[SERVER] Password for ({account}) Created with: \nUsername: {username} \nPassword: {password1} \n'
-         f'Note: {note}', conn)
+    return 'Password Created'
 
 
-def remove_pass(conn, sessionID):
-    send("\n-Removing Password-", conn)
-    found = 0
-    while found == 0:  # Check if account does not exist
-        send('Account name: ', conn)
-        account = receive(conn).lower()
-        with sqlite3.connect("PassManager.db") as db:
-            cursor = db.cursor()
-            search = "SELECT * FROM passwords WHERE userID=? AND account=?"
-            cursor.execute(search, [sessionID, account])
-            results = cursor.fetchall()
+def remove_pass(sessionID, account):
+    with sqlite3.connect("PassManager.db") as db:
+        cursor = db.cursor()
+    # Check if account does not exist
+    search = "SELECT * FROM passwords WHERE userID=? AND account=?"
+    cursor.execute(search, [sessionID, account])
+    results = cursor.fetchall()
+    if not results:
+        return 'Error: Account does not Exist'
 
-        if not results:
-            send('Account does not exist, would you like to try again (y/n): ', conn)
-            again = receive(conn)
-            if again.lower() == 'n':
-                return
-        else:
-            break
-
-    send(f'This will delete all information related to the account: {account}, confirm (y/n): ', conn)
-    confirm = receive(conn)
-    if confirm.lower() == 'y':
-        deletePasswords = '''DELETE FROM passwords WHERE userID=? AND account=?;'''
-        cursor.execute(deletePasswords, [sessionID, account])
-        db.commit()
-
-        salt = results[0][5]
-        f = create_key_from_pass(Login.password, salt)
-        decrypted = f.decrypt(results[0][4])
-
-        send(f'\n[SERVER] Account ({account}) has been removed:\nUsername: {results[0][3]} \nPassword: {decrypted.decode()} \n',
-             conn)
     else:
-        return
+        deletePassword = '''DELETE FROM passwords WHERE userID=? AND account=?;'''
+        cursor.execute(deletePassword, [sessionID, account])
+        db.commit()
+        return 'Password Deleted'
 
 
+# Put on app side
 def generate_pass():
     uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     lowercasse = uppercase.lower()

@@ -57,7 +57,7 @@ def receive(conn):
 
 
 def refine(msg, call):
-    space_args = msg.replace(call, '').split(',')
+    space_args = msg.replace(call, '').split('<>')
     args = []
     for arg in space_args:
         args.append(arg.strip())
@@ -75,7 +75,7 @@ def handle_client(conn, addr):
         sessionID = None
 
         while connected:  # Loop until they disconnect ------------------
-            send('test: ', conn)
+            send(': ', conn)
             msg = receive(conn)
 
             if 'login: ' in msg:
@@ -114,6 +114,27 @@ def handle_client(conn, addr):
                 # 'Error: User Does not Exist' or
                 # 'Error: User is Already an Admin' or
                 # 'User Promoted to Admin'
+
+            elif 'create_pass: ' in msg:
+                # (account, username, password, note)
+                args = refine(msg, 'create_pass: ')
+                send(Passwords.create_pass(sessionID, args[0], args[1], args[2], args[3]), conn)
+                # 'Error: Account Already Exists' or
+                # 'Password Created'
+
+            elif 'remove_pass: ' in msg:
+                # (account)
+                args = refine(msg, 'remove_pass: ')
+                send(Passwords.remove_pass(sessionID, args[0]), conn)
+                # 'Password Deleted'
+                # 'Error: Account does not Exist'
+
+            elif 'search_pass: ' in msg:
+                # (account)
+                args = refine(msg, 'search_pass: ')
+                send(Passwords.search_pass(conn, sessionID, args[0], args[1]), conn)
+                # 'Password Deleted'
+                # 'Error: Account does not Exist'
 
         conn.close()
 

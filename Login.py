@@ -131,7 +131,7 @@ def promote_user(username):
     cursor.execute(find, [username])
     results = cursor.fetchall()
     if not results:
-        return f'Error: User Does not Exist'
+        return f'Error: User does not Exist'
     if results[0][0] == 1:
         return f'Error: User is Already an Admin'
     else:

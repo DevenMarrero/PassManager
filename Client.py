@@ -55,7 +55,7 @@ def send(msg):
     client.send(message)
 
 
-print(receive() + ":" + str(PORT))  # Prints the Server connect message
+# print(receive() + ":" + str(PORT))  # Prints the Server connect message
 
 while True:
     try:
