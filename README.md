@@ -30,7 +30,7 @@ More on how to setup a port forward later.
 
 **Server Only Accessable on your Network (Local)**
 
-The server will automatically use the local IP of the mchine it is running on.
+The server will automatically use the local IP of the machine it is running on.
 The program will ask you what port to run the server on and this can be any number between 1 and about 63000 but I use port 8050 as I can remember it and
 as far as I know it is unused by other programs.
 
