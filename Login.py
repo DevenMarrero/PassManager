@@ -44,8 +44,7 @@ def login(username, passw):
         correctPass = ''
 
     if verify_password(correctPass, password):
-        for i in results:
-            sessionID = i[0]
+        sessionID = results[0][0]
         return sessionID
 
     else:
