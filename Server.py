@@ -56,93 +56,67 @@ def receive(conn):
         return msg
 
 
+def refine(msg, call):
+    space_args = msg.replace(call, '').split(',')
+    args = []
+    for arg in space_args:
+        args.append(arg.strip())
+    return args
+
+
 def handle_client(conn, addr):
     try:
         with sqlite3.connect("PassManager.db") as db:  # Setup Connection
             cursor = db.cursor()
         cursor.execute("CREATE TEMP TABLE IF NOT EXISTS Variables (Name TEXT PRIMARY KEY, Value TEXT);")
         print(f"[NEW CONNECTION] {addr} connected.")
-        send(f'[SERVER] Connected to Server at {SERVER}', conn)
+        # send(f'[SERVER] Connected to Server at {SERVER}', conn)
         connected = True
-        send('''
--LOGIN MENU-
-1 - Login
-2 - Create new User
-: ''', conn)
-        answer = receive(conn)
-        if answer == '2':
-            Login.create_user(conn)
-
-        sessionID = Login.login(conn)  # Login User
-
-        if sessionID:  # Save sessionID
-            execute = "INSERT OR REPLACE INTO Variables VALUES ('sessionID', ?);"
-            cursor.execute(execute, [sessionID])
-        else:  # If they wanted to not login
-            connected = False
-            send(f'[SERVER] You have disconnected', conn)
-            print(f'[SERVER] User ({addr}) Has Disconnected')
+        sessionID = None
 
         while connected:  # Loop until they disconnect ------------------
-            if not Login.check_admin(sessionID):
-                send('''
--MAIN MENU-
-1 - Open Passwords Menu
-2 - Open User Menu
-3 - Disconnect From Server
-: ''', conn)
-                msg = receive(conn)
+            send('test: ', conn)
+            msg = receive(conn)
 
-                if msg == "3":
-                    connected = False
-                    send(f'[SERVER] You have disconnected', conn)
-                    print(f'[SERVER] User ({addr}) Has Disconnected')
-                    continue
+            if 'login: ' in msg:
+                # (username, password)
+                args = refine(msg, 'login: ')
+                sessionID = Login.login(args[0], args[1])  # Login User
+                if sessionID:  # Save sessionID
+                    execute = "INSERT OR REPLACE INTO Variables VALUES ('sessionID', ?);"
+                    cursor.execute(execute, [sessionID])
+                    send('Login Successful', conn)
+                else:  # Invalid login
+                    send('Error: Username or Password Incorrect', conn)
 
-                elif msg == '1':
-                    Passwords.pass_menu(conn, sessionID)
-                    continue
-                elif msg == "2":
-                    if Login.check_admin(sessionID):
-                        Login.admin_user_menu(conn, sessionID)
-                    else:
-                        Login.user_menu(conn, sessionID)
-                    continue
-                else:
-                    send("[SERVER] Invalid input please try again ", conn)
-                    continue
+            elif 'change_password: ' in msg:
+                # (New_password)
+                args = refine(msg, 'change_password: ')
+                send(Login.change_password(sessionID, args[0]), conn)
+                # 'Password Changed'
 
-            else:
-                send('''
--MAIN MENU-
-1 - Open Passwords Menu
-2 - Open User Menu
-3 - Disconnect From Server
-4 - Close Server
-: ''', conn)
-                msg = receive(conn)
+            elif 'create_user: ' in msg:
+                # (username, firstName, password)
+                args = refine(msg, 'create_user: ')
+                send(Login.create_user(args[0], args[1], args[2]), conn)
+                # 'User Created' or 'Error: Username Already Taken'
 
-                if msg == "3":
-                    connected = False
-                    send(f'[SERVER] You have disconnected', conn)
-                    print(f'[SERVER] User ({addr}) Has Disconnected')
-                    continue
-                elif msg == '1':
-                    Passwords.pass_menu(conn, sessionID)
-                    continue
-                elif msg == "2":
-                    if Login.check_admin(sessionID):
-                        Login.admin_user_menu(conn, sessionID)
-                    else:
-                        Login.user_menu(conn, sessionID)
-                    continue
-                elif msg == '4':
-                    close_server()
-                    continue
-                else:
-                    send("[SERVER] Invalid input please try again ", conn)
-                    continue
+            elif 'remove_user: ' in msg:
+                # (password)
+                args = refine(msg, 'remove_user: ')
+                send(Login.remove_user(sessionID, args[0]), conn)
+                # 'User Deleted' or 'Error: Password Incorrect'
+
+            elif 'promote_user: ' in msg:
+                # (username)
+                args = refine(msg, 'promote_user: ')
+                send(Login.promote_user(args[0]), conn)
+                # 'Error: User Does not Exist' or
+                # 'Error: User is Already an Admin' or
+                # 'User Promoted to Admin'
+
         conn.close()
+
     except ConnectionResetError:
         print(f'[SERVER] User ({addr}) Has Disconnected')
         conn.close()
@@ -181,8 +155,9 @@ username VARCHAR(20) NOT NULL,
 password VARCHAR(100) NOT NULL,
 salt BLOB NOT NULL,
 note TEXT,
+favorite INTEGER NOT NULL,
 FOREIGN KEY (userID) REFERENCES user(userID));
 ''')
 
-print("[STARTING] server is starting...")
+print("[STARTING] Server is starting...")
 start()

@@ -2,28 +2,10 @@ import binascii
 import hashlib
 import os
 import sqlite3
-from tabulate import tabulate
 
 FORMAT = 'utf-8'
 HEADER = 64
 password = ''
-
-
-def send(msg, conn):
-    message = msg.encode(FORMAT)
-    msg_length = len(message)
-    send_length = str(msg_length).encode(FORMAT)
-    send_length += b' ' * (HEADER - len(send_length))
-    conn.send(send_length)
-    conn.send(message)
-
-
-def receive(conn):
-    msg_length = conn.recv(HEADER).decode(FORMAT)
-    if msg_length:
-        msg_length = int(msg_length)
-        msg = conn.recv(msg_length).decode(FORMAT)
-        return msg
 
 
 def hash_password(password):
@@ -47,51 +29,34 @@ def verify_password(stored_password, provided_password):
     return pwdhash == stored_password
 
 
-def login(conn):
+#  Done
+def login(username, passw):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
     global password
-    cursor.execute("SELECT COUNT(*) AS RowCnt FROM user")  # Check if no users exist
+    password = passw
+    find_user = "SELECT * FROM user WHERE username = ?"
+    cursor.execute(find_user, [username])
     results = cursor.fetchall()
-    if results[0][0] == 0:
-        send('[SERVER] No users found please create a new one', conn)
-        create_user(conn)
-        send('-Please log into new user-', conn)
-    while True:
-        send('Username: ', conn)
-        username = receive(conn)
-        send('Password (hidden): ', conn)
-        password = receive(conn)
+    try:
+        correctPass = results[0][3]
+    except IndexError:
+        correctPass = ''
 
-        find_user = "SELECT * FROM user WHERE username = ?"
-        cursor.execute(find_user, [username])
-        results = cursor.fetchall()
-        try:
-            correctPass = results[0][3]
-        except IndexError:
-            correctPass = ''
+    if verify_password(correctPass, password):
+        for i in results:
+            sessionID = i[0]
+        return sessionID
 
-        if verify_password(correctPass, password):
-            for i in results:
-                send(f"\nWelcome, {i[2]}", conn)
-                sessionID = i[0]
-            break
-
-        else:
-            send("Username and password not recognized, do you want to try again (y/n): ", conn)
-            again = receive(conn)
-            if again.lower() == 'n':
-                sessionID = None
-                break
-
-    return sessionID
+    else:
+        return
 
 
-def check_admin(userid):
+def check_admin(userID):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
     find = 'SELECT isadmin FROM user WHERE userID = ?'
-    cursor.execute(find, [userid])
+    cursor.execute(find, [userID])
     results = cursor.fetchall()
     if results[0][0] == 1:
         return True
@@ -99,217 +64,79 @@ def check_admin(userid):
         return False
 
 
-def admin_user_menu(conn, userID):
-    while True:
-        send('''
--ADMIN USER MENU-
-1 - List all users
-2 - Change Password
-3 - Promote User 
-4 - Create new user
-5 - Remove user
-6 - Back
-: ''', conn)
-        while True:
-            answer = receive(conn)
-            if answer == '1':
-                list_users(conn)
-                break
-            elif answer == '2':
-                change_password(conn, userID)
-                break
-            elif answer == '3':
-                promote_user(conn)
-                break
-            elif answer == '4':
-                create_user(conn, 1)
-                break
-            elif answer == '5':
-                remove_user(conn)
-                break
-            elif answer == '6':
-                return
-            else:
-                send("Invalid input please try again: ", conn)
-
-
-def user_menu(conn, userID):
-    while True:
-        send('''
--USER MENU-
-1 - Change Password
-2 - Back
-: ''', conn)
-        while True:
-            answer = receive(conn)
-            if answer == '1':
-                change_password(conn, userID)
-                break
-            elif answer == '2':
-                return
-            else:
-                send("Invalid input please try again: ", conn)
-
-
-def change_password(conn, userID):
-    send("-Changing Password-", conn)
+#  Done
+def change_password(userID, newPass):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
 
-    loop = True
-    while loop:
-        send('Old password: ', conn)
-        oldPass = receive(conn)
-
-        find = "SELECT password FROM user WHERE userID = ?"
-        cursor.execute(find, [userID])
-        correctPass = cursor.fetchall()[0][0]
-        if verify_password(correctPass, oldPass):
-            loop = False
-        else:
-            send("Password incorrect, would you like to try again (y/n): ", conn)
-            answer = receive(conn)
-            if answer.lower() == 'y':
-                continue
-            else:
-                return
-
-    send('New password: ', conn)
-    newPass = receive(conn)
-    send('Confirm new password: ', conn)
-    newPass1 = receive(conn)
-    while newPass != newPass1 or newPass == "":
-        send("-Passwords don't match or they are blank-", conn)
-        send("New password: ", conn)
-        newPass = receive(conn)
-        send("Confirm new password: ", conn)
-        newPass1 = receive(conn)
     change = "UPDATE user SET password = ? WHERE userID = ?;"
     cursor.execute(change, [hash_password(newPass), userID])
     db.commit()
-    send(f"[SERVER] Password updated to ({newPass})", conn)
+    return 'Password Changed'
 
 
-def create_user(conn, isadmin=0):
-    send("-Creating User-", conn)
-    found = 0
-    while found == 0:  # Check if user already exists
-        send("Please enter a username: ", conn)
-        username = receive(conn)
-        with sqlite3.connect("PassManager.db") as db:
-            cursor = db.cursor()
-        findUser = "SELECT * FROM user WHERE username = ?"
-        cursor.execute(findUser, [username])
+#  Done
+def create_user(username, firstname, password):
+    with sqlite3.connect("PassManager.db") as db:
+        cursor = db.cursor()
 
-        if cursor.fetchall():
-            send('Username taken, would you like to try again (y/n): ', conn)
-            again = receive(conn)
-            if again.lower() == 'n':
-                return
-        else:
-            if username == '':
-                send("Username Cannot be blank, would you like to try again (y/n):", conn)
-                again = receive(conn)
-                if again.lower() == 'n':
-                    return
-            else:
-                found = 1
+    # Check if name taken
+    findUser = "SELECT * FROM user WHERE username = ?"
+    cursor.execute(findUser, [username])
+    if cursor.fetchall():
+        return 'Error: Username Already Taken'
 
-    send("Firstname: ", conn)
-    firstname = receive(conn)
-    admin = 0
-    if isadmin == 1:
-        send("Make user an Admin (y/n): ", conn)
-        admin = receive(conn)
-        admin = 1 if (admin == 'y') else 0
-    send("Password: ", conn)
-    password = receive(conn)
-    send("Reenter Password: ", conn)
-    password1 = receive(conn)
-    while password != password1 or password == "":
-        send("-Passwords don't match or they are blank-", conn)
-        send("Password: ", conn)
-        password = receive(conn)
-        send("Reenter Password: ", conn)
-        password1 = receive(conn)
+    # Create User
+    # Check if no other users
+    cursor.execute("SELECT COUNT(*) FROM user")
+    results = cursor.fetchall()
+    if results == 0:
+        admin = 1
+    else:
+        admin = 0
     insertData = '''INSERT INTO user(username, firstname, password, isadmin)
     VALUES(?,?,?,?)'''
     cursor.execute(insertData, [username, firstname, hash_password(password), admin])
     db.commit()
-    send(f'[SERVER] User {username} Created \n', conn)
+    return 'User Created'
 
 
-def remove_user(conn):
-    send("-Removing User-", conn)
-    found = 0
-    while found == 0:  # Check if user does not exist
-        send('username: ', conn)
-        username = receive(conn)
-        send("Password: ", conn)
-        password = receive(conn)
-        with sqlite3.connect("PassManager.db") as db:
-            cursor = db.cursor()
-
-        find_user = "SELECT * FROM user WHERE username = ?"
-        cursor.execute(find_user, [username])
-        results = cursor.fetchall()
-        correctPass = results[0][3]
-
-        if verify_password(correctPass, password):
-            found = 1
-            for i in results:
-                userID = i[0]
-        else:
-            send('Password incorrect or user does not exist, would you like to try again (y/n): ', conn)
-            again = receive(conn)
-            if again.lower() == 'n':
-                return
-
-    send('This will delete all information related to this user, confirm (y/n): ', conn)
-    confirm = receive(conn)
-    if confirm.lower() == 'y':
-        deleteUser = '''DELETE FROM user WHERE username=?;'''
-        cursor.execute(deleteUser, [username])
-        deletePasswords = '''DELETE FROM passwords WHERE userID=?;'''
-        cursor.execute(deletePasswords, [userID])
-        db.commit()
-        send(f'[SERVER] All data from {username} has been removed \n', conn)
-    else:
-        return
-
-
-def promote_user(conn):
+#  Done
+def remove_user(sessionID, password):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
-    while True:
-        send('Username you want to promote: ', conn)
-        username = receive(conn)
-        find = "SELECT isadmin FROM user WHERE username = ?"
-        cursor.execute(find, [username])
-        results = cursor.fetchall()
-        if not results:
-            send('User does not exist, would you like to try again? (y/n): ', conn)
-            answer = receive(conn)
-            if answer.lower() == 'n':
-                return
-            continue
-        else:
-            if results[0][0] == 1:
-                send(f"[Server] {username} is already an admin", conn)
-                return
-            else:
-                break
-    print(results[0][0])
-    promote = "UPDATE user SET isadmin = 1 WHERE username = ?"
-    cursor.execute(promote, [username])
-    db.commit()
-    send(f"[Server] User {username} is now an admin", conn)
 
-
-def list_users(conn):
-    with sqlite3.connect("PassManager.db") as db:
-        cursor = db.cursor()
-    cursor.execute("SELECT username, firstname, isadmin FROM user")
+    get_pass = "SELECT password FROM user WHERE userID = ?"
+    cursor.execute(get_pass, [sessionID])
     results = cursor.fetchall()
-    send("\n", conn)
-    send(tabulate(results, headers=["ID", "Username", "Firstname", "IsAdmin"], tablefmt="github", showindex=True), conn)
+    correctPass = results[0][0]
+
+    if verify_password(correctPass, password):
+        # Password Correct: Delete User
+        deleteUser = '''DELETE FROM user WHERE userID=?;'''
+        cursor.execute(deleteUser, [sessionID])
+        deletePasswords = '''DELETE FROM passwords WHERE userID=?;'''
+        cursor.execute(deletePasswords, [sessionID])
+        db.commit()
+        return 'User Deleted'
+
+    else:
+        return 'Error: Password Incorrect'
+
+
+#  Done
+def promote_user(username):
+    with sqlite3.connect("PassManager.db") as db:
+        cursor = db.cursor()
+    find = "SELECT isadmin FROM user WHERE username = ?"
+    cursor.execute(find, [username])
+    results = cursor.fetchall()
+    if not results:
+        return f'Error: User Does not Exist'
+    if results[0][0] == 1:
+        return f'Error: User is Already an Admin'
+    else:
+        promote = "UPDATE user SET isadmin = 1 WHERE username = ?"
+        cursor.execute(promote, [username])
+        db.commit()
+        return 'User Promoted to Admin'
