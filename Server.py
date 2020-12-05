@@ -138,10 +138,16 @@ def handle_client(conn, addr):
 
             elif 'check_admin: ' in msg:
                 # (ID)
-                args = refine(msg, 'check_admin: ')
                 send(Login.check_admin(sessionID), conn)
                 # '1' admin
                 # '0' user
+
+            elif 'toggle_favorite: ' in msg:
+                # (account)
+                args = refine(msg, 'toggle_favorite: ')
+                send(Passwords.toggle_favorite(sessionID, args[0]), conn)
+                # 'Error: Account does not Exist'
+                # 'Favourite Toggled'
 
         conn.close()
 

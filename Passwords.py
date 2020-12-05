@@ -136,6 +136,23 @@ def remove_pass(sessionID, account):
         return 'Password Deleted'
 
 
+def toggle_favorite(sessionID, account):
+    with sqlite3.connect("PassManager.db") as db:
+        cursor = db.cursor()
+    # Check if account does not exist
+    search = "SELECT favorite FROM passwords WHERE userID=? AND account=?"
+    cursor.execute(search, [sessionID, account])
+    results = cursor.fetchall()
+    if not results:
+        return 'Error: Account does not Exist'
+    else:
+        favorite = 0 if int(results[0][0]) == 1 else 1
+        toggle = "UPDATE passwords SET favorite=? WHERE userID=? AND account=?"
+        cursor.execute(toggle, [favorite, sessionID, account])
+        db.commit()
+        return 'Favourite Toggled'
+
+
 # Put on app side
 def generate_pass():
     uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
