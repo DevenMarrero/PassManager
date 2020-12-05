@@ -136,6 +136,13 @@ def handle_client(conn, addr):
                 # 'Password Deleted'
                 # 'Error: Account does not Exist'
 
+            elif 'check_admin: ' in msg:
+                # (ID)
+                args = refine(msg, 'check_admin: ')
+                send(Login.check_admin(sessionID), conn)
+                # '1' admin
+                # '0' user
+
         conn.close()
 
     except ConnectionResetError:

@@ -58,9 +58,9 @@ def check_admin(userID):
     cursor.execute(find, [userID])
     results = cursor.fetchall()
     if results[0][0] == 1:
-        return True
+        return '1'
     else:
-        return False
+        return '0'
 
 
 #  Done
