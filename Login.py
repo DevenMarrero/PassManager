@@ -3,8 +3,6 @@ import hashlib
 import os
 import sqlite3
 
-FORMAT = 'utf-8'
-HEADER = 64
 password = ''
 
 
@@ -29,7 +27,6 @@ def verify_password(stored_password, provided_password):
     return pwdhash == stored_password
 
 
-#  Done
 def login(username, passw):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
@@ -63,7 +60,6 @@ def check_admin(userID):
         return '0'
 
 
-#  Done
 def change_password(userID, newPass):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
@@ -74,7 +70,15 @@ def change_password(userID, newPass):
     return 'Password Changed'
 
 
-#  Done
+def change_username(userID, newName):
+    with sqlite3.connect("PassManager.db") as db:
+        cursor = db.cursor()
+    change = "UPDATE user SET username = ? WHERE userID = ?;"
+    cursor.execute(change, [newName, userID])
+    db.commit()
+    return 'Username Changed'
+
+
 def create_user(username, firstname, password):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
@@ -88,7 +92,7 @@ def create_user(username, firstname, password):
     # Create User
     # Check if no other users
     cursor.execute("SELECT COUNT(*) FROM user")
-    results = cursor.fetchall()
+    results = cursor.fetchall()[0][0]
     if results == 0:
         admin = 1
     else:
@@ -100,7 +104,6 @@ def create_user(username, firstname, password):
     return 'User Created'
 
 
-#  Done
 def remove_user(sessionID, password):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
@@ -123,7 +126,6 @@ def remove_user(sessionID, password):
         return 'Error: Password Incorrect'
 
 
-#  Done
 def promote_user(username):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()

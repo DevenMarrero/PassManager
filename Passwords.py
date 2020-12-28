@@ -45,27 +45,31 @@ def create_key_from_pass(userPass, salt):
 
 
 # Functions
-# SQL passwords is passID, userID, account, username, password
 
 
 def search_pass(conn, sessionID, search, export):
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
     search = '%' + search + '%'
-    passList = f"SELECT account, username, password, salt, note FROM passwords WHERE userID= ? AND account LIKE ?"
+    passList = f"SELECT account, username, password, salt, note, favourite " \
+               f"FROM passwords WHERE userID= ? AND account LIKE ?"
     cursor.execute(passList, [sessionID, search])
     results = cursor.fetchall()
     for ind, val in enumerate(results):
+        # Make each account into list
         results[ind] = list(val)
+        # Capitalize account name
         results[ind][0] = results[ind][0].capitalize()
+        # Decrypt account password
         salt = val[3]
         f = create_key_from_pass(Login.password, salt)
         decrypted = f.decrypt(val[2])
         results[ind][2] = decrypted.decode()
+        # Remove Salt
         results[ind].remove(results[ind][3])
 
     results = sorted(results)
-    headers = ["Account", "Username", "Password", "Note"]
+    headers = ["Account", "Username", "Password", "Note", "Favourite"]
     if int(export) == 0:
         return str(results)
     # Send Client Search excel
@@ -99,7 +103,8 @@ def search_pass(conn, sessionID, search, export):
         os.remove(filename)
 
 
-def create_pass(sessionID, account, username, password, note):
+def create_pass(sessionID, account, username, password, note, favourite):
+    account = account.lower()
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
     # Check if password already exists
@@ -112,14 +117,15 @@ def create_pass(sessionID, account, username, password, note):
     password = password.encode()
     salt = os.urandom(16)
     f = create_key_from_pass(Login.password, salt)
-    insertData = '''INSERT INTO passwords(userID, account, username, password, salt, note)
-        VALUES(?,?,?,?,?,?)'''
-    cursor.execute(insertData, [sessionID, account, username, f.encrypt(password), salt, note])
+    insertData = '''INSERT INTO passwords(userID, account, username, password, salt, note, favourite)
+        VALUES(?,?,?,?,?,?,?)'''
+    cursor.execute(insertData, [sessionID, account, username, f.encrypt(password), salt, note, favourite])
     db.commit()
     return 'Password Created'
 
 
 def remove_pass(sessionID, account):
+    account = account.lower()
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
     # Check if account does not exist
@@ -136,19 +142,20 @@ def remove_pass(sessionID, account):
         return 'Password Deleted'
 
 
-def toggle_favorite(sessionID, account):
+def toggle_favourite(sessionID, account):
+    account = account.lower()
     with sqlite3.connect("PassManager.db") as db:
         cursor = db.cursor()
     # Check if account does not exist
-    search = "SELECT favorite FROM passwords WHERE userID=? AND account=?"
+    search = "SELECT favourite FROM passwords WHERE userID=? AND account=?"
     cursor.execute(search, [sessionID, account])
     results = cursor.fetchall()
     if not results:
         return 'Error: Account does not Exist'
     else:
-        favorite = 0 if int(results[0][0]) == 1 else 1
-        toggle = "UPDATE passwords SET favorite=? WHERE userID=? AND account=?"
-        cursor.execute(toggle, [favorite, sessionID, account])
+        favourite = 0 if int(results[0][0]) == 1 else 1
+        toggle = "UPDATE passwords SET favourite=? WHERE userID=? AND account=?"
+        cursor.execute(toggle, [favourite, sessionID, account])
         db.commit()
         return 'Favourite Toggled'
 

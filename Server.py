@@ -5,8 +5,7 @@ import Login
 import Passwords
 import time
 import os
-# GUI
-HEADER = 64
+
 FORMAT = 'utf-8'
 connections = []
 while True:
@@ -38,22 +37,15 @@ def close_server():
 
 def send(msg, conn):
     message = msg.encode(FORMAT)
-    msg_length = len(message)
-    send_length = str(msg_length).encode(FORMAT)
-    send_length += b' ' * (HEADER - len(send_length))
     try:
-        conn.send(send_length)
         conn.send(message)
     except ConnectionResetError:
         print(f"Could not contact client")
 
 
 def receive(conn):
-    msg_length = conn.recv(HEADER).decode(FORMAT)
-    if msg_length:
-        msg_length = int(msg_length)
-        msg = conn.recv(msg_length).decode(FORMAT)
-        return msg
+    msg = conn.recv(1024).decode(FORMAT)
+    return msg if msg else "disconnect: "
 
 
 def refine(msg, call):
@@ -70,13 +62,14 @@ def handle_client(conn, addr):
             cursor = db.cursor()
         cursor.execute("CREATE TEMP TABLE IF NOT EXISTS Variables (Name TEXT PRIMARY KEY, Value TEXT);")
         print(f"[NEW CONNECTION] {addr} connected.")
-        # send(f'[SERVER] Connected to Server at {SERVER}', conn)
         connected = True
         sessionID = None
 
         while connected:  # Loop until they disconnect ------------------
-            send(': ', conn)
             msg = receive(conn)
+
+            # REMOVE THIS
+            print(msg)
 
             if 'login: ' in msg:
                 # (username, password)
@@ -94,6 +87,12 @@ def handle_client(conn, addr):
                 args = refine(msg, 'change_password: ')
                 send(Login.change_password(sessionID, args[0]), conn)
                 # 'Password Changed'
+
+            elif 'change_username: ' in msg:
+                # (New_username)
+                args = refine(msg, 'change_username: ')
+                send(Login.change_username(sessionID, args[0]), conn)
+                # 'Username Changed'
 
             elif 'create_user: ' in msg:
                 # (username, firstName, password)
@@ -116,9 +115,9 @@ def handle_client(conn, addr):
                 # 'User Promoted to Admin'
 
             elif 'create_pass: ' in msg:
-                # (account, username, password, note)
+                # (account, username, password, note, favourite)
                 args = refine(msg, 'create_pass: ')
-                send(Passwords.create_pass(sessionID, args[0], args[1], args[2], args[3]), conn)
+                send(Passwords.create_pass(sessionID, args[0], args[1], args[2], args[3], args[4]), conn)
                 # 'Error: Account Already Exists' or
                 # 'Password Created'
 
@@ -130,11 +129,11 @@ def handle_client(conn, addr):
                 # 'Error: Account does not Exist'
 
             elif 'search_pass: ' in msg:
-                # (account)
+                # (account, export)
+                # Export 1 or 0
                 args = refine(msg, 'search_pass: ')
                 send(Passwords.search_pass(conn, sessionID, args[0], args[1]), conn)
-                # 'Password Deleted'
-                # 'Error: Account does not Exist'
+                # (search results)
 
             elif 'check_admin: ' in msg:
                 # (ID)
@@ -142,17 +141,21 @@ def handle_client(conn, addr):
                 # '1' admin
                 # '0' user
 
-            elif 'toggle_favorite: ' in msg:
+            elif 'toggle_favourite: ' in msg:
                 # (account)
-                args = refine(msg, 'toggle_favorite: ')
-                send(Passwords.toggle_favorite(sessionID, args[0]), conn)
+                args = refine(msg, 'toggle_favourite: ')
+                send(Passwords.toggle_favourite(sessionID, args[0]), conn)
                 # 'Error: Account does not Exist'
                 # 'Favourite Toggled'
 
+            elif 'disconnect: ' in msg:
+                break
+
+        print(f'[SERVER] User {addr} Has Disconnected')
         conn.close()
 
     except ConnectionResetError:
-        print(f'[SERVER] User ({addr}) Has Disconnected')
+        print(f'[SERVER] User {addr} Has Disconnected')
         conn.close()
 
 
@@ -171,6 +174,7 @@ def start():
 with sqlite3.connect("PassManager.db") as db:
     cursor = db.cursor()
 
+#  Create user Table
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS user(
 userID INTEGER PRIMARY KEY,
@@ -180,6 +184,7 @@ password VARCHAR(20) NOT NULL,
 isadmin INTEGER NOT NULL);
 ''')
 
+#  Create passwords Table
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS passwords(
 passwordID INTEGER PRIMARY KEY,
@@ -189,7 +194,7 @@ username VARCHAR(20) NOT NULL,
 password VARCHAR(100) NOT NULL,
 salt BLOB NOT NULL,
 note TEXT,
-favorite INTEGER NOT NULL,
+favourite INTEGER NOT NULL,
 FOREIGN KEY (userID) REFERENCES user(userID));
 ''')
 
