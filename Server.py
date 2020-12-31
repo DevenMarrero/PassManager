@@ -5,19 +5,33 @@ import Login
 import Passwords
 import time
 import os
+import sys
 
 FORMAT = 'utf-8'
 connections = []
-while True:
-    PORT = input('Server Port: ')
-    if not PORT:
-        print("Port must be entered")
-    else:
-        try:
-            PORT = int(PORT)
-            break
-        except ValueError:
-            print("Port must be an integer")
+
+
+def get_port():
+    while True:
+        port = input('Server Port: ')
+        if not port:
+            print("Port must be entered")
+        else:
+            try:
+                port = int(port)
+                return port
+            except ValueError:
+                print("Port must be an integer")
+
+
+if len(sys.argv) == 2:
+    try:
+        PORT = int(sys.argv[1])
+    except ValueError:
+        PORT = get_port()
+
+else:
+    PORT = get_port()
 
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = ('', PORT)
